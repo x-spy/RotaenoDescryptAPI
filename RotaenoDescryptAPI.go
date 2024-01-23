@@ -96,6 +96,7 @@ func decryptAndSaveApiHandler(w http.ResponseWriter, r *http.Request) {
 		err := file.Close()
 		if err != nil {
 			fmt.Println("Failed to close file stream.", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}(file)
 
@@ -106,7 +107,8 @@ func decryptAndSaveApiHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := fmt.Fprint(w, `Game data saved successfully.`); err != nil {
-		log.Println("Error writing response: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -119,7 +121,7 @@ func decryptApiHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, gameData, err := decryptFromRequest(&w, r)
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -157,6 +159,9 @@ func decryptFromRequest(w *http.ResponseWriter, r *http.Request) (string, []byte
 	key := sha256.Sum256([]byte(keyString))
 
 	saveData, err := rotaenoDecrypt(saveDataEncrypted, key[:])
+	if err != nil {
+		return "", nil, err
+	}
 
 	return data.ObjectID, saveData, nil
 }
