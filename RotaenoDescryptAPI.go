@@ -26,8 +26,23 @@ type decryptRequestData struct {
 }
 
 func getGameDataApiHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Only GET method is accepted", http.StatusMethodNotAllowed)
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+
+	allowed := false
+	if r.Method == http.MethodGet {
+		allowed = true
+	}
+	if r.Method == http.MethodOptions {
+		if r.Header.Get("Access-Control-Request-Method") == http.MethodGet {
+			allowed = true
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+	}
+	if !allowed {
+		http.Error(w, "Method is not allowed.", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -63,8 +78,23 @@ func getGameDataApiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func decryptAndSaveApiHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST method is accepted", http.StatusMethodNotAllowed)
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+
+	allowed := false
+	if r.Method == http.MethodPost {
+		allowed = true
+	}
+	if r.Method == http.MethodOptions {
+		if r.Header.Get("Access-Control-Request-Method") == http.MethodPost {
+			allowed = true
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+	}
+	if !allowed {
+		http.Error(w, "Method is not allowed.", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -113,9 +143,23 @@ func decryptAndSaveApiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func decryptApiHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
 
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST method is accepted", http.StatusMethodNotAllowed)
+	allowed := false
+	if r.Method == http.MethodPost {
+		allowed = true
+	}
+	if r.Method == http.MethodOptions {
+		if r.Header.Get("Access-Control-Request-Method") == http.MethodPost {
+			allowed = true
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+	}
+	if !allowed {
+		http.Error(w, "Method is not allowed.", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -145,13 +189,13 @@ func decryptFromRequest(w *http.ResponseWriter, r *http.Request) (string, []byte
 
 	var data decryptRequestData
 	if err := json.Unmarshal(body, &data); err != nil {
-		http.Error(*w, "Error parsing JSON", http.StatusBadRequest)
-		return "", nil, fmt.Errorf("failed to unmarshal JSON")
+		http.Error(*w, "Error parsing JSON.", http.StatusBadRequest)
+		return "", nil, fmt.Errorf("Failed to unmarshal request JSON string. ")
 	}
 
 	saveDataEncrypted, err := base64.StdEncoding.DecodeString(data.SaveData)
 	if err != nil {
-		http.Error(*w, "Bad base64 string", http.StatusBadRequest)
+		http.Error(*w, "Bad base64 string.", http.StatusBadRequest)
 		return data.ObjectID, nil, fmt.Errorf("bad base64 string")
 	}
 
