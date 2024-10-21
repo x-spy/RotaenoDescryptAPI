@@ -17,7 +17,7 @@ func main() {
 	http.HandleFunc("/decryptAndSaveGameData", decryptAndSaveApiHandler)
 	http.HandleFunc("/decryptGameData", decryptApiHandler)
 	http.HandleFunc("/getGameData", getGameDataApiHandler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":80", nil))
 }
 
 type decryptRequestData struct {
@@ -46,9 +46,9 @@ func getGameDataApiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	objectID, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Error reading request body: "+err.Error(), http.StatusInternalServerError)
+	objectID := r.URL.Query().Get("object-id")
+	if objectID == "" {
+		http.Error(w, "Missing or empty object-id query parameter.", http.StatusBadRequest)
 		return
 	}
 
